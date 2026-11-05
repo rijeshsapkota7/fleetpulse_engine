@@ -41,6 +41,6 @@ def login_user(data : UserLogin, db : Session = Depends(get_db)):
     user = db.query(Users).filter(Users.email == data.email).first()
     if not user:
         raise HTTPException(status_code=401, detail="email or password is incorrect")
-    if check_password(data.password, user.password):
-        return {"Message" : "User logged in succesfffulyy"}
-    raise HTTPException(status_code=401, detail="email or password is incorrect")
+    if check_password(data.password, user.password) is False:
+        raise HTTPException(status_code=401, detail="email or password is incorrect")
+    
