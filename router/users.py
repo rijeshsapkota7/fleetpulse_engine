@@ -4,7 +4,7 @@ from pydantic import BaseModel, EmailStr
 from enum import Enum
 from database.database import get_db
 from database.model import Users
-from security.security import hash_password, check_password
+from security.security import hash_password, check_password, create_access_token
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -43,4 +43,5 @@ def login_user(data : UserLogin, db : Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="email or password is incorrect")
     if check_password(data.password, user.password) is False:
         raise HTTPException(status_code=401, detail="email or password is incorrect")
-    
+    access_token = create_access_token(user.id, user.email)
+    return {"token" : access_token, "type" : "bearer"}
