@@ -16,6 +16,36 @@ class UpdateOrderStatus(BaseModel):
 
 router = APIRouter(prefix="/deliveries", tags=["Deliveries"])
 
+@router.get("/my")
+def fetch_orders(id : int | None = None, db : Session = Depends(get_db), current_users :Users = Depends(verify_token)):
+    user = db.query(Users).filter(Users.id == current_users.id).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="not authorized")
+    if id:
+        order = db.query(Deliveries).filter(Deliveries.id == id).first()
+        if not order:
+            raise HTTPException(status_code=404, detail=f"order with id {id} not found")
+        if order.customer_id != current_users.id | order.rider_id != current_users.id:
+            raise HTTPException(status_code=401, detail="not authorized")
+        return {"orders details" : order}
+    if current_users.role == "customer":
+        all_orders = db.query(Deliveries).filter(Deliveries.customer_id == current_users.id).all()
+        return {"orders" : all_orders}
+    if current_users.role == "rider" | "dispatcher":
+        all_order = db.query(Deliveries).filter(Deliveries.rider_id == current_users.id).all()
+        return {"orders" : all_order}
+
+@router.get("/available-to-pick")
+def available_to_pick(db : Session = Depends(get_db), current_user : Users = Depends(verify_token)):
+    user = db.query(Users).filter(Users.id == current_user.id).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="not authorized")
+    if user.role != "rider" | "dispatcher":
+        raise HTTPException(status_code=403, detail="not allowed")
+    all_orders = db.query(Deliveries).filter(Deliveries.rider_id == None, Deliveries.status == "pending").all()
+    return {"orders" : all_orders}
+    
+
 @router.post("/", status_code=201)
 def create_order(data : CreateDeliveries, db : Session = Depends(get_db), current_user : Users = Depends(verify_token)):
     user = db.query(Users).filter(Users.id == current_user.id).first()
