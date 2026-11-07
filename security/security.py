@@ -3,11 +3,13 @@ import bcrypt
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from database.database import get_db
 from database.model import Users
 
 secrete_key = "your_secure_fallback_secret_key_here"
 algorithm =  "HS256"
+security_scheme = HTTPBearer()
 
 def hash_password(plain_pswd : str) -> str:
     raw_pswd = plain_pswd.encode("utf-8")
@@ -29,7 +31,8 @@ def create_access_token(user_id : int = None, user_email : str = None, exp : int
     access_token = jwt.encode(payload, secrete_key, algorithm)
     return access_token
 
-def verify_token(token : str, db : Session = Depends(get_db)):
+def verify_token(credentials : HTTPAuthorizationCredentials = Depends(security_scheme) , db : Session = Depends(get_db)):
+    token = credentials.credentials
     try:
         decode_token = jwt.decode(token, secrete_key, algorithms=[algorithm])
         user_id = decode_token.get("user_id")
@@ -41,5 +44,3 @@ def verify_token(token : str, db : Session = Depends(get_db)):
     if user is None:
         raise HTTPException(status_code=401, detail="User no longer exists")
     return user
-
-    

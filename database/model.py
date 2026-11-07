@@ -13,7 +13,7 @@ class Deliveries(Base):
     __tablename__ = "deliveries"
     id = Column(Integer, primary_key=True)
     customer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    rider_id = Column(Integer, ForeignKey("users.id"))
+    rider_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     pickup_address = Column(String, nullable=False)
     dropoff_address = Column(String, nullable=False)
     status = Column(String, nullable=False)
