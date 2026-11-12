@@ -44,3 +44,16 @@ def verify_token(credentials : HTTPAuthorizationCredentials = Depends(security_s
     if user is None:
         raise HTTPException(status_code=401, detail="User no longer exists")
     return user
+
+def verify_Ws_connection(token : str, db : Session = Depends(get_db)) -> Users:
+    try:
+        decode_token = jwt.decode(token, secrete_key, algorithms=[algorithm])
+        user_id = decode_token.get("user_id")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token payload")
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="token in invalid or expired")
+    user = db.query(Users).filter(Users.id == user_id).first()
+    if user is None:
+        raise HTTPException(status_code=401, detail="User no longer exists")
+    return user

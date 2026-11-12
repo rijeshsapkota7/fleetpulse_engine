@@ -31,7 +31,7 @@ def fetch_orders(id : int | None = None, db : Session = Depends(get_db), current
     if current_users.role == "customer":
         all_orders = db.query(Deliveries).filter(Deliveries.customer_id == current_users.id).all()
         return {"orders" : all_orders}
-    if current_users.role == "rider" | "dispatcher":
+    if current_users.role not in ( "rider" , "dispatcher"):
         all_order = db.query(Deliveries).filter(Deliveries.rider_id == current_users.id).all()
         return {"orders" : all_order}
 
@@ -40,7 +40,7 @@ def available_to_pick(db : Session = Depends(get_db), current_user : Users = Dep
     user = db.query(Users).filter(Users.id == current_user.id).first()
     if not user:
         raise HTTPException(status_code=401, detail="not authorized")
-    if user.role != "rider" | "dispatcher":
+    if user.role not in ( "rider" , "dispatcher"):
         raise HTTPException(status_code=403, detail="not allowed")
     all_orders = db.query(Deliveries).filter(Deliveries.rider_id == None, Deliveries.status == "pending").all()
     return {"orders" : all_orders}
@@ -64,7 +64,7 @@ def assign_delivery(id : int, db : Session = Depends(get_db), current_user : Use
     user = db.query(Users).filter(Users.id == current_user.id).first()
     if not user:
         raise HTTPException(status_code=401, detail="not authorized")
-    if user.role != "rider" | "dispatcher":
+    if user.role not in  ("rider", "dispatcher"):
         raise HTTPException(status_code=401, detail="not authorized")
     order = db.query(Deliveries).filter(Deliveries.id == id).first()
     if not order:
@@ -81,7 +81,7 @@ def update_delivery(data : UpdateOrderStatus, id : int, db : Session = Depends(g
     user = db.query(Users).filter(Users.id == current_user.id).first()
     if not user:
         raise HTTPException(status_code=401, detail="not authorized")
-    if user.role != "rider" | "dispatcher":
+    if user.role not in ("rider" , "dispatcher"):
         raise HTTPException(status_code=401, detail="not authorized")
     order = db.query(Deliveries).filter(Deliveries.id == id).first()
     if not order:
